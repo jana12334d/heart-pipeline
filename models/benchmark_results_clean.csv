@@ -1,0 +1,5 @@
+dataset,split,model,accuracy,f1,auc
+clean,val,SVM,,0.0,0.5
+clean,test,SVM,1.0,1.0,1.0
+clean,val,RandomForest,,0.0,0.5
+clean,test,RandomForest,1.0,1.0,1.0
