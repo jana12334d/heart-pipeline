@@ -6,7 +6,6 @@ st.set_page_config(page_title="Heart ML Dashboard", layout="wide")
 
 st.title("💓 Heart Disease ML Dashboard")
 
-# Tabs
 tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Model Comparison",
     "⚠️ Noise Sensitivity",
@@ -14,7 +13,8 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "ℹ️ About"
 ])
 
-    base = "models"
+base = "models"
+
 clean_file = os.path.join(base, "benchmark_results_clean.csv")
 noise_file = os.path.join(base, "benchmark_results_noise.csv")
 feat_file = os.path.join(base, "feature_importance.csv")
@@ -23,12 +23,11 @@ df_clean = pd.read_csv(clean_file) if os.path.exists(clean_file) else None
 df_noise = pd.read_csv(noise_file) if os.path.exists(noise_file) else None
 df_feat = pd.read_csv(feat_file) if os.path.exists(feat_file) else None
 
-# -------- TAB 1 --------
 with tab1:
     st.header("Model Comparison")
 
     if df_clean is not None:
-        st.dataframe(df_clean)
+        st.dataframe(df_clean, use_container_width=True)
 
         test_df = df_clean[df_clean["split"] == "test"]
 
@@ -41,43 +40,57 @@ with tab1:
     if df_feat is not None:
         st.subheader("Feature Importance")
         df_feat = df_feat.sort_values(by="importance", ascending=False)
+        st.dataframe(df_feat, use_container_width=True)
         st.bar_chart(df_feat.set_index("feature")["importance"])
 
-# -------- TAB 2 --------
 with tab2:
     st.header("Noise Sensitivity")
 
     if df_noise is not None:
-        st.dataframe(df_noise)
+        st.dataframe(df_noise, use_container_width=True)
 
-        pivot = df_noise.pivot(index="noise_level", columns="model", values="f1")
-        st.line_chart(pivot)
+        st.subheader("F1 Score Drop")
+        f1_pivot = df_noise.pivot(index="noise_level", columns="model", values="f1")
+        st.line_chart(f1_pivot)
 
-# -------- TAB 3 --------
+        st.subheader("AUC Drop")
+        auc_pivot = df_noise.pivot(index="noise_level", columns="model", values="auc")
+        st.line_chart(auc_pivot)
+
 with tab3:
-    st.header("Heart Disease Prediction")
+    st.header("Live Heart Disease Prediction")
 
-    age = st.slider("Age", 20, 80, 50)
-    chol = st.slider("Cholesterol", 100, 400, 200)
+    age = st.slider("Age", 20, 90, 50)
+    chol = st.slider("Cholesterol", 100, 600, 220)
 
     if st.button("Predict Risk"):
         risk = (age + chol) / 500
-        st.progress(min(risk, 1.0))
+        risk = max(0, min(risk, 1))
 
-        if risk > 0.6:
-            st.error("High Risk")
+        st.subheader("Risk Score")
+        st.progress(risk)
+
+        if risk >= 0.6:
+            st.error(f"High Risk: {risk:.2f}")
         else:
-            st.success("Low Risk")
+            st.success(f"Low Risk: {risk:.2f}")
 
-# -------- TAB 4 --------
 with tab4:
     st.header("About")
 
-    st.write("""
-    Pipeline: Kafka → Spark → Parquet → ML → Dashboard
-    
-    Key finding:
-    Model performance drops as noise increases.
+    st.markdown("""
+    ### Pipeline Architecture
+    CSV → Kafka → Spark ETL → Parquet → Spark MLlib → Streamlit Dashboard
+
+    ### Team Contribution
+    - Infrastructure setup
+    - Kafka producer
+    - Spark ETL pipeline
+    - ML model training
+    - Dashboard deployment
+
+    ### Key Finding
+    Model performance decreases as noise increases.
     """)
 
 st.success("Dashboard ready ✅")
