@@ -14,8 +14,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "ℹ️ About"
 ])
 
-base = os.path.expanduser("~/heart_pipeline/models/")
-
+    base = "models"
 clean_file = os.path.join(base, "benchmark_results_clean.csv")
 noise_file = os.path.join(base, "benchmark_results_noise.csv")
 feat_file = os.path.join(base, "feature_importance.csv")
